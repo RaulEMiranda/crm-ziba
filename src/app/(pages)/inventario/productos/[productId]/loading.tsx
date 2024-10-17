@@ -1,0 +1,5 @@
+export default function LoaderProductId() {
+  return <h1>
+    Cargando... Lorem ipsum dolor sit amet consectetur adipisicing elit. Id, enim voluptatum maiores veniam incidunt similique. In, nemo commodi hic perferendis odio quam delectus molestias, vitae ipsum dolorum fugiat, ipsam et! Lorem, ipsum dolor sit amet consectetur adipisicing elit. Fuga voluptatibus at veniam temporibus modi ipsum obcaecati quod laudantium numquam autem sequi molestiae veritatis porro sed magnam corporis exercitationem, minima nostrum. Lorem ipsum dolor sit amet consectetur adipisicing elit. Rem nesciunt nostrum, amet iusto temporibus dolorum, illo optio eius iste ex dicta ullam facilis blanditiis culpa quaerat quos nam. Dignissimos, unde? Lorem ipsum dolor, sit amet consectetur adipisicing elit. Officia, mollitia rerum! Beatae corrupti tempora sapiente, voluptate, error quasi dolorem, aperiam quam sequi cum harum? Assumenda quas alias repellendus ipsam harum!
+  </h1>
+}
