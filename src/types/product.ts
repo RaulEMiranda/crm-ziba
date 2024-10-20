@@ -1,3 +1,5 @@
+import { Timestamp } from "firebase/firestore";
+
 export interface Product {
   id: string;
   name: string;
@@ -5,12 +7,12 @@ export interface Product {
   color: string;
   price: string;
   barcode: Barcode[];
-  createdAt: Date | FirebaseFirestore.Timestamp;
+  createdAt: Date | Timestamp;
 }
 
 export interface Barcode {
   barcode: string;
-  createdAt: Date | FirebaseFirestore.Timestamp;
+  createdAt: Date | Timestamp;
 }
 
 export interface Category {

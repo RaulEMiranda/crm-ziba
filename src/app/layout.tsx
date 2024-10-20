@@ -6,6 +6,9 @@ import { AuthProvider } from "@/components/AuthContext";
 export const metadata: Metadata = {
   title: "Gestion Ziba",
   description: "Sistema de Gestión Comercial Ziba",
+  icons: {
+    icon:"/favicon.ico",
+  }
 };
 
 export default function RootLayout({

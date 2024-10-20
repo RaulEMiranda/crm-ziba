@@ -4,24 +4,35 @@ import { useCreateUserWithEmailAndPassword } from "react-firebase-hooks/auth";
 import { User, sendEmailVerification } from "firebase/auth";
 import { useForm } from "react-hook-form";
 
+// Define una interfaz para el formulario
+interface SignUpFormData {
+  email: string;
+  password: string;
+}
+
 const SignUp = () => {
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm();
+  } = useForm<SignUpFormData>(); // Aplica la interfaz aquí
+
   const [createUserWithEmailAndPassword] =
     useCreateUserWithEmailAndPassword(auth);
 
-  const onSubmit = async (data) => {
+  const onSubmit = async (data: SignUpFormData) => {
     const { email, password } = data;
     try {
       const res = await createUserWithEmailAndPassword(email, password);
-      const user: User = res.user;
 
-      await sendEmailVerification(user);
+      // Verifica si 'res' no es undefined antes de acceder a 'res.user'
+      if (res && res.user) {
+        const user: User = res.user;
 
-      sessionStorage.setItem("user", true);
+        await sendEmailVerification(user);
+
+        sessionStorage.setItem("user", "true"); // Asegúrate de que el valor sea un string
+      }
     } catch (e) {
       console.error(e);
     }

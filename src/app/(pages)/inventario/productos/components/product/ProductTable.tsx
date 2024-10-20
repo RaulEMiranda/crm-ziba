@@ -24,7 +24,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import { useRouter } from "next/navigation";
 import FullScreenLoader from "@/components/Loader";
 import ConfirmDialog from "@/components/ConfirmDialog";
-
+import EditProduct from "./EditProduct";
 
 export default function ProductTable() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -34,9 +34,11 @@ export default function ProductTable() {
   const [rowsPerPage, setRowsPerPage] = useState(8);
   const [searchTerm, setSearchTerm] = useState(""); // Estado para el filtro de búsqueda
   const [openConfirmDelete, setOpenConfirmDelete] = useState(false); // Estado para el modal de confirmación
-  const [productToDelete, setProductToDelete] = useState<string | null>(null); // Estado para el producto a eliminar
-  const [loading, setLoading] = useState(false); // Estado para controlar el loader
-  const router = useRouter(); // Obtén el enrutador
+  const [productToDelete, setProductToDelete] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  const [openEditModal, setOpenEditModal] = useState(false);
+  const [productToEdit, setProductToEdit] = useState<string | null>(null);
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "products"), (snapshot) => {
@@ -120,8 +122,9 @@ export default function ProductTable() {
     }
   };
 
-  const handleEdit = (id: string) => {
-    console.log("Editar producto con id:", id);
+  const handleEdit = (productId: string) => {
+    setProductToEdit(productId);
+    setOpenEditModal(true); // Abrir el modal de edición
   };
 
   const handleView = (id: string) => {
@@ -227,7 +230,7 @@ export default function ProductTable() {
                     variant="outlined"
                     color="primary"
                     startIcon={<EditIcon />}
-                    onClick={() => handleEdit(product.id)}
+                    onClick={() => handleEdit(product.id)} // Llama a la función con el producto actual
                     sx={{ marginRight: "10px" }}
                   >
                     Editar
@@ -263,6 +266,12 @@ export default function ProductTable() {
         rowsPerPage={rowsPerPage}
         onRowsPerPageChange={handleChangeRowsPerPage}
         rowsPerPageOptions={[8, 15, 30]}
+      />
+
+      <EditProduct
+        open={openEditModal}
+        handleClose={() => setOpenEditModal(false)}
+        productId={productToEdit}
       />
 
       {/* Componente de diálogo de confirmación para eliminar */}

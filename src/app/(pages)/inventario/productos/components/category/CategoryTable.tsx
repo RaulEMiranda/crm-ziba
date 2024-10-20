@@ -20,6 +20,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import FullScreenLoader from "@/components/Loader";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import EditCategory from "./EditCategory";
 
 export interface Category {
   id: string;
@@ -35,6 +36,8 @@ export default function CategoryTable() {
   const [loading, setLoading] = useState(false);
   const [openConfirmDelete, setOpenConfirmDelete] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
+  const [openEditModal, setOpenEditModal] = useState(false); // Para abrir/cerrar modal de edición
+  const [categoryToEdit, setCategoryToEdit] = useState<string | null>(null);
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "categories"), (snapshot) => {
@@ -77,7 +80,8 @@ export default function CategoryTable() {
   };
 
   const handleEdit = (id: string) => {
-    console.log("Editar categoría con id:", id);
+    setCategoryToEdit(id);
+    setOpenEditModal(true); // Abre el modal de edición
   };
 
   const sortedCategories = categories.sort((a, b) => {
@@ -184,6 +188,12 @@ export default function CategoryTable() {
         onConfirm={handleDelete}
         title="Confirmar eliminación"
         description="¿Estás seguro de que deseas eliminar esta categoría?"
+      />
+
+      <EditCategory
+        open={openEditModal}
+        handleClose={() => setOpenEditModal(false)}
+        categoryId={categoryToEdit}
       />
 
       {/* FullScreenLoader */}

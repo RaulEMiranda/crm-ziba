@@ -15,7 +15,7 @@ export default function NotFound() {
       </Typography>
       <Link href="/" passHref>
         <Button variant="contained" color="primary">
-          Return Home
+          Regresar al Inicio
         </Button>
       </Link>
     </Container>

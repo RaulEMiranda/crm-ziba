@@ -16,7 +16,7 @@ import InventoryIcon from "@mui/icons-material/Inventory";
 import PeopleIcon from "@mui/icons-material/People";
 import MonetizationOnIcon from "@mui/icons-material/MonetizationOn";
 import DashboardIcon from "@mui/icons-material/Dashboard";
-import CategoryIcon from "@mui/icons-material/Category";
+// import CategoryIcon from "@mui/icons-material/Category";
 import StoreIcon from "@mui/icons-material/Store";
 import LogoutIcon from "@mui/icons-material/Logout"; // Icono para el botón de Cerrar sesión
 import Link from "next/link";
@@ -129,7 +129,7 @@ export default function ClippedDrawer() {
                     <ListItemText primary="Productos" />
                   </ListItemButton>
                 </ListItem>
-                <ListItem disablePadding>
+                {/* <ListItem disablePadding>
                   <ListItemButton
                     component={Link}
                     href="/inventario/categorias"
@@ -140,7 +140,7 @@ export default function ClippedDrawer() {
                     </ListItemIcon>
                     <ListItemText primary="Categorías" />
                   </ListItemButton>
-                </ListItem>
+                </ListItem> */}
               </List>
             </Collapse>
           </List>

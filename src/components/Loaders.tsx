@@ -102,3 +102,49 @@ export function LoaderAddCategoryModal({
     </Modal>
   );
 }
+
+export function LoaderEditProductModal({
+  open,
+  loading,
+  success,
+  error,
+}: LoaderModalProps) {
+  return (
+    <Modal open={open}>
+      <Box
+        sx={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          bgcolor: "background.paper",
+          p: 4,
+          boxShadow: 24,
+          borderRadius: 2,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+        }}
+      >
+        {loading ? (
+          <>
+            <CircularProgress />
+            <Typography mt={2}>Guardando modificaciones...</Typography>
+          </>
+        ) : success ? (
+          <>
+            <CheckCircle color="success" sx={{ fontSize: 40 }} />
+            <Typography mt={2}>Producto modificado</Typography>
+          </>
+        ) : error ? (
+          <>
+            <Error color="error" sx={{ fontSize: 40 }} />
+            <Typography mt={2} color="error">
+              Error al modificar el producto
+            </Typography>
+          </>
+        ) : null}
+      </Box>
+    </Modal>
+  );
+}

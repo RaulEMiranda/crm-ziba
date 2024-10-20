@@ -1,84 +1,63 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Modal, Box, Button, Typography, TextField } from "@mui/material";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { addDoc, collection, getDocs, query, where } from "firebase/firestore";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "@/firebase/config";
 import { CategoryFormValues, categorySchema } from "@/lib/validators/category";
-import { LoaderAddCategoryModal } from "@/components/Loaders";
+import FullScreenLoader from "@/components/Loader";
 
-interface CategoryModalProps {
+interface EditCategoryProps {
   open: boolean;
   handleClose: () => void;
+  categoryId: string | null;
 }
 
-export default function AddCategoryModal({
+export default function EditCategory({
   open,
   handleClose,
-}: CategoryModalProps) {
+  categoryId,
+}: EditCategoryProps) {
   const {
     register,
     handleSubmit,
-    reset,
-    setError, // Para establecer errores personalizados
+    setValue,
     formState: { errors },
   } = useForm<CategoryFormValues>({
     resolver: zodResolver(categorySchema),
   });
 
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [serverError, setServerError] = useState(false); // Error de servidor
-  const [loaderOpen, setLoaderOpen] = useState(false);
+
+  useEffect(() => {
+    const fetchCategory = async () => {
+      if (categoryId) {
+        const categoryDoc = await getDoc(doc(db, "categories", categoryId));
+        if (categoryDoc.exists()) {
+          const categoryData = categoryDoc.data() as CategoryFormValues;
+          setValue("category", categoryData.category);
+        }
+      }
+    };
+
+    fetchCategory();
+  }, [categoryId, setValue]);
 
   const onSubmit = async (data: CategoryFormValues) => {
     setLoading(true);
-    setServerError(false); // Resetea el error de servidor
-    setLoaderOpen(true);
-
     try {
-      const q = query(
-        collection(db, "categories"),
-        where("category", "==", data.category)
-      );
-      const querySnapshot = await getDocs(q);
-
-      if (!querySnapshot.empty) {
-        setLoaderOpen(false);
-        setError("category", {
-          type: "manual",
-          message: "La categoría ya existe",
+      if (categoryId) {
+        await updateDoc(doc(db, "categories", categoryId), {
+          category: data.category,
         });
-        throw new Error("category_exists");
-      }
-
-      // Si no existe, agregar categoría
-      await addDoc(collection(db, "categories"), { category: data.category });
-
-      setLoading(false);
-      setSuccess(true);
-      setTimeout(() => {
-        setLoaderOpen(false);
-        reset();
-        setSuccess(false);
         handleClose();
-      }, 1500);
-    } catch (error) {
-      if (error instanceof Error && error.message === "category_exists") {
-        // Si el error es de tipo `Error` y es "category_exists"
-        setLoading(false);
-        return;
       }
-
-      // Si ocurre un error de servidor diferente, lo manejamos
-      setServerError(true);
+    } catch (error) {
+      console.error("Error al actualizar la categoría:", error);
+    } finally {
       setLoading(false);
-      setTimeout(() => {
-        setLoaderOpen(false);
-        setServerError(false);
-      }, 1500);
     }
   };
 
@@ -98,16 +77,19 @@ export default function AddCategoryModal({
           }}
         >
           <Typography variant="h6" gutterBottom>
-            Agregar Categoría
+            Editar Categoría
           </Typography>
           <form onSubmit={handleSubmit(onSubmit)}>
             <TextField
-              label="Nombre de la Categoría"
+              label="Categoría"
               {...register("category")}
               fullWidth
               margin="normal"
               error={!!errors.category}
               helperText={errors.category ? errors.category.message : null}
+              slotProps={{
+                inputLabel: { shrink: true },
+              }}
             />
             <Box
               mt={2}
@@ -128,12 +110,7 @@ export default function AddCategoryModal({
           </form>
         </Box>
       </Modal>
-      <LoaderAddCategoryModal
-        open={loaderOpen}
-        loading={loading}
-        success={success}
-        error={serverError} // Mostrar solo si es un error de servidor
-      />
+      <FullScreenLoader loading={loading} />
     </>
   );
 }

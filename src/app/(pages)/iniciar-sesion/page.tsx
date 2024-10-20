@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { auth } from "@/firebase/config";
 import { setPersistence, browserLocalPersistence } from "firebase/auth";
 import { useEffect, useState } from "react";
-import { Box, TextField, Button, Typography, Container } from "@mui/material";
+import { Box, TextField, Button, Typography } from "@mui/material";
 
 interface FormData {
   email: string;
@@ -51,16 +51,7 @@ const SignIn = () => {
   };
 
   return (
-    <Container
-      sx={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: "#1a202c",
-      }}
-      maxWidth=""
-    >
+    <Box className="min-h-screen mx-0 flex items-center justify-center bg-[#1a202c]">
       <Box
         sx={{
           backgroundColor: "#2d3748",
@@ -173,7 +164,7 @@ const SignIn = () => {
           </Typography>
         )}
       </Box>
-    </Container>
+    </Box>
   );
 };
 
