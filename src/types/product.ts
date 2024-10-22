@@ -6,12 +6,7 @@ export interface Product {
   category: string;
   color: string;
   price: string;
-  barcode: Barcode[];
-  createdAt: Date | Timestamp;
-}
-
-export interface Barcode {
-  barcode: string;
+  barcode: string[];
   createdAt: Date | Timestamp;
 }
 

@@ -1,26 +1,30 @@
-import React, { useState } from "react"; 
-import { Modal, Box, Button, TextField, Typography } from "@mui/material"; 
-import { Barcode } from "@/types/product"; 
-import { Controller, useForm } from "react-hook-form"; 
-import { db } from "@/firebase/config"; 
-import { doc, updateDoc, getDoc } from "firebase/firestore"; 
+import React, { useState } from "react";
+import { Modal, Box, Button, TextField, Typography } from "@mui/material";
+import { Controller, useForm } from "react-hook-form";
+import { db } from "@/firebase/config";
+import { doc, updateDoc, getDoc } from "firebase/firestore";
 import FullScreenLoader from "@/components/Loader";
 
-interface EditBarcodeModalProps { 
-  open: boolean; 
-  handleClose: () => void; 
-  barcode: string; 
-  productId: string; 
+interface EditBarcodeModalProps {
+  open: boolean;
+  handleClose: () => void;
+  barcode: string;
+  productId: string;
 }
 
-const EditBarcodeModal: React.FC<EditBarcodeModalProps> = ({ open, handleClose, barcode, productId }) => { 
-  const { control, handleSubmit, reset } = useForm<{ barcode: string }>({ 
-    defaultValues: { barcode }, 
-  }); 
+const EditBarcodeModal: React.FC<EditBarcodeModalProps> = ({
+  open,
+  handleClose,
+  barcode,
+  productId,
+}) => {
+  const { control, handleSubmit, reset } = useForm<{ barcode: string }>({
+    defaultValues: { barcode },
+  });
 
   const [loading, setLoading] = useState(false);
 
-  const handleEditBarcode = async (data: { barcode: string }) => { 
+  const handleEditBarcode = async (data: { barcode: string }) => {
     setLoading(true);
     handleClose(); // Cierra la modal para mostrar el FullScreenLoader
 
@@ -30,8 +34,8 @@ const EditBarcodeModal: React.FC<EditBarcodeModalProps> = ({ open, handleClose, 
 
       if (productSnapshot.exists()) {
         const productData = productSnapshot.data();
-        const updatedBarcodes = productData.barcode.map((code: Barcode) =>
-          code.barcode === barcode ? { ...code, barcode: data.barcode } : code
+        const updatedBarcodes = productData.barcode.map((code: string) =>
+          code === barcode ? data.barcode : code
         );
 
         await updateDoc(productRef, { barcode: updatedBarcodes });
@@ -47,54 +51,58 @@ const EditBarcodeModal: React.FC<EditBarcodeModalProps> = ({ open, handleClose, 
     }
   };
 
-  return ( 
-    <> 
-      {loading ? ( 
+  return (
+    <>
+      {loading ? (
         <FullScreenLoader loading={loading} /> // Muestra el loader si está cargando
-      ) : ( 
-        <Modal open={open} onClose={handleClose}> 
-          <Box 
-            sx={{ 
-              position: "absolute", 
-              top: "50%", 
-              left: "50%", 
-              transform: "translate(-50%, -50%)", 
-              width: 400, 
-              bgcolor: "background.paper", 
-              boxShadow: 24, 
-              p: 4, 
-              borderRadius: 2, 
-            }} 
-          > 
-            <Typography variant="h6" component="h2" gutterBottom> 
-              Editar Código de Barras 
-            </Typography> 
-            
-            <Box component="form" onSubmit={handleSubmit(handleEditBarcode)}> 
-              <Controller name="barcode" control={control} render={({ field }) => ( 
-                <TextField 
-                  {...field} 
-                  label="Nuevo Código de Barras" 
-                  variant="outlined" 
-                  fullWidth 
-                  margin="normal" 
-                /> 
-              )} /> 
-              
-              <Box display="flex" justifyContent="space-between" mt={2}> 
-                <Button variant="contained" color="primary" type="submit"> 
-                  Guardar 
-                </Button> 
-                <Button variant="outlined" onClick={handleClose}> 
-                  Cancelar 
-                </Button> 
-              </Box> 
-            </Box> 
-          </Box> 
-        </Modal> 
-      )} 
-    </> 
-  ); 
+      ) : (
+        <Modal open={open} onClose={handleClose}>
+          <Box
+            sx={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              width: 400,
+              bgcolor: "background.paper",
+              boxShadow: 24,
+              p: 4,
+              borderRadius: 2,
+            }}
+          >
+            <Typography variant="h6" component="h2" gutterBottom>
+              Editar Código de Barras
+            </Typography>
+
+            <Box component="form" onSubmit={handleSubmit(handleEditBarcode)}>
+              <Controller
+                name="barcode"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    label="Nuevo Código de Barras"
+                    variant="outlined"
+                    fullWidth
+                    margin="normal"
+                  />
+                )}
+              />
+
+              <Box display="flex" justifyContent="space-between" mt={2}>
+                <Button variant="contained" color="primary" type="submit">
+                  Guardar
+                </Button>
+                <Button variant="outlined" onClick={handleClose}>
+                  Cancelar
+                </Button>
+              </Box>
+            </Box>
+          </Box>
+        </Modal>
+      )}
+    </>
+  );
 };
 
 export default EditBarcodeModal;

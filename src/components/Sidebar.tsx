@@ -16,35 +16,41 @@ import InventoryIcon from "@mui/icons-material/Inventory";
 import PeopleIcon from "@mui/icons-material/People";
 import MonetizationOnIcon from "@mui/icons-material/MonetizationOn";
 import DashboardIcon from "@mui/icons-material/Dashboard";
-// import CategoryIcon from "@mui/icons-material/Category";
 import StoreIcon from "@mui/icons-material/Store";
-import LogoutIcon from "@mui/icons-material/Logout"; // Icono para el botón de Cerrar sesión
+import LogoutIcon from "@mui/icons-material/Logout"; 
 import Link from "next/link";
 import { Collapse } from "@mui/material";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+// import CategoryIcon from "@mui/icons-material/Category";
 import { usePathname } from "next/navigation";
-import { signOut } from "firebase/auth"; // Importa signOut de Firebase
-import { auth } from "@/firebase/config"; // Asegúrate de que esté correctamente importado
-import { useRouter } from "next/navigation"; // Para la redirección después del logout
+import { signOut } from "firebase/auth";
+import { auth } from "@/firebase/config";
+import { useRouter } from "next/navigation";
 
 const drawerWidth = 240;
 
 export default function ClippedDrawer() {
   const pathname = usePathname();
-  const router = useRouter(); // Para la redirección
+  const router = useRouter();
   const isInventarioOpen = pathname.startsWith("/inventario");
+  const isVentasOpen = pathname.startsWith("/ventas");
 
   const [openInventario, setOpenInventario] = React.useState(isInventarioOpen);
+  const [openVentas, setOpenVentas] = React.useState(isVentasOpen);
 
   const handleInventarioClick = () => {
     setOpenInventario(!openInventario);
   };
 
+  const handleVentasClick = () => {
+    setOpenVentas(!openVentas);
+  };
+
   const handleLogout = async () => {
     try {
-      await signOut(auth); // Cierra sesión de Firebase
-      router.push("/iniciar-sesion"); // Redirige a la página de inicio de sesión
+      await signOut(auth);
+      router.push("/iniciar-sesion");
     } catch (error) {
       console.error("Error signing out:", error);
     }
@@ -73,30 +79,23 @@ export default function ClippedDrawer() {
             boxSizing: "border-box",
             display: "flex",
             flexDirection: "column",
-            justifyContent: "space-between", // Esto asegura que el contenido del sidebar esté entre el contenido superior y el botón inferior
+            justifyContent: "space-between",
           },
         }}
       >
         <Toolbar />
         <Box sx={{ overflow: "auto", flexGrow: 1 }}>
           <List>
-            {[
-              {
-                text: "Dashboard",
-                icon: <DashboardIcon />,
-                path: "/",
-              },
-              {
-                text: "Clientes",
-                icon: <PeopleIcon />,
-                path: "/clientes",
-              },
-              {
-                text: "Ventas",
-                icon: <MonetizationOnIcon />,
-                path: "/ventas",
-              },
-            ].map((item) => (
+            {[{
+              text: "Dashboard",
+              icon: <DashboardIcon />,
+              path: "/",
+            },
+            {
+              text: "Clientes",
+              icon: <PeopleIcon />,
+              path: "/clientes",
+            }].map((item) => (
               <ListItem key={item.text} disablePadding>
                 <ListItemButton component={Link} href={item.path}>
                   <ListItemIcon>{item.icon}</ListItemIcon>
@@ -104,7 +103,7 @@ export default function ClippedDrawer() {
                 </ListItemButton>
               </ListItem>
             ))}
-            <Divider />
+
             {/* Inventario con submenú */}
             <ListItem disablePadding>
               <ListItemButton onClick={handleInventarioClick}>
@@ -143,10 +142,48 @@ export default function ClippedDrawer() {
                 </ListItem> */}
               </List>
             </Collapse>
+
+            {/* Ventas con submenú */}
+            <ListItem disablePadding>
+              <ListItemButton onClick={handleVentasClick}>
+                <ListItemIcon>
+                  <MonetizationOnIcon />
+                </ListItemIcon>
+                <ListItemText primary="Ventas" />
+                {openVentas ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              </ListItemButton>
+            </ListItem>
+            <Collapse in={openVentas} timeout="auto" unmountOnExit>
+              <List component="div" disablePadding>
+                <ListItem disablePadding>
+                  <ListItemButton
+                    component={Link}
+                    href="/ventas/generar-venta"
+                    sx={{ pl: 4 }}
+                  >
+                    <ListItemIcon>
+                      <MonetizationOnIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Generar Venta" />
+                  </ListItemButton>
+                </ListItem>
+                <ListItem disablePadding>
+                  <ListItemButton
+                    component={Link}
+                    href="/ventas/historial"
+                    sx={{ pl: 4 }}
+                  >
+                    <ListItemIcon>
+                      <MonetizationOnIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Historial de Ventas" />
+                  </ListItemButton>
+                </ListItem>
+              </List>
+            </Collapse>
           </List>
         </Box>
         <Divider />
-        {/* Botón de Cerrar sesión */}
         <List>
           <ListItem disablePadding>
             <ListItemButton onClick={handleLogout}>
