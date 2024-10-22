@@ -32,8 +32,8 @@ export default function ProductTable() {
   const [orderBy, setOrderBy] = useState<keyof Product>("name");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(8);
-  const [searchTerm, setSearchTerm] = useState(""); // Estado para el filtro de búsqueda
-  const [openConfirmDelete, setOpenConfirmDelete] = useState(false); // Estado para el modal de confirmación
+  const [searchTerm, setSearchTerm] = useState("");
+  const [openConfirmDelete, setOpenConfirmDelete] = useState(false);
   const [productToDelete, setProductToDelete] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -57,7 +57,6 @@ export default function ProductTable() {
     setOrderBy(property);
   };
 
-  // Filtrar los productos según el término de búsqueda
   const filteredProducts = products.filter((product) => {
     const lowerCaseSearchTerm = searchTerm.toLowerCase();
     return (
@@ -78,7 +77,6 @@ export default function ProductTable() {
     return aValue < bValue ? 1 : -1;
   });
 
-  // Filtrar los productos para mostrar solo los de la página actual
   const paginatedProducts = sortedProducts.slice(
     page * rowsPerPage,
     page * rowsPerPage + rowsPerPage
@@ -156,7 +154,7 @@ export default function ProductTable() {
       </Box>
       <TableContainer
         component={Paper}
-        className="max-w-[1500px] mx-auto mt-5 border-[1px] bg-transparent"
+        className="max-w-[1500px] mx-auto mt-5 border-[1px]"
       >
         <Table>
           <TableHead>

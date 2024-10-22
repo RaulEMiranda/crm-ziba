@@ -1,4 +1,3 @@
-// BarcodeTable.tsx
 "use client";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -14,11 +13,11 @@ import {
   Box,
   TablePagination,
 } from "@mui/material";
-import { Barcode, Product } from "@/types/product";
+import { Product } from "@/types/product";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { db } from "@/firebase/config";
-import { doc, onSnapshot, Timestamp, updateDoc } from "firebase/firestore";
+import { doc, onSnapshot, updateDoc } from "firebase/firestore";
 import FullScreenLoader from "@/components/Loader";
 import Image from "next/image";
 import { Controller, useForm } from "react-hook-form";
@@ -30,8 +29,6 @@ const BarcodeTable: React.FC<{ productId: string }> = ({ productId }) => {
   const [loading, setLoading] = useState(false);
   const [editingBarcode, setEditingBarcode] = useState<string | null>(null);
   const [barcodeFilter, setBarcodeFilter] = useState("");
-  const [startDate, setStartDate] = useState<string>("");
-  const [endDate, setEndDate] = useState<string>("");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(8);
   const { control, handleSubmit, reset } = useForm<{ barcode: string }>();
@@ -79,7 +76,7 @@ const BarcodeTable: React.FC<{ productId: string }> = ({ productId }) => {
     setLoading(true);
     if (product && barcodeToDelete) {
       const updatedBarcodes = product.barcode.filter(
-        (code) => code.barcode !== barcodeToDelete
+        (code) => code !== barcodeToDelete
       );
       const productRef = doc(db, "products", product.id);
       await updateDoc(productRef, { barcode: updatedBarcodes });
@@ -88,18 +85,9 @@ const BarcodeTable: React.FC<{ productId: string }> = ({ productId }) => {
     }
   };
 
-  const filteredBarcodes = product?.barcode.filter((code) => {
-    const isMatchingBarcode = code.barcode.includes(barcodeFilter);
-    const createdAt = new Date(
-      code.createdAt instanceof Timestamp
-        ? code.createdAt.toDate()
-        : code.createdAt
-    );
-    const isInDateRange =
-      (!startDate || createdAt >= new Date(startDate)) &&
-      (!endDate || createdAt <= new Date(endDate));
-    return isMatchingBarcode && isInDateRange;
-  });
+  const filteredBarcodes = product?.barcode.filter((code) =>
+    code.includes(barcodeFilter)
+  );
 
   const paginatedBarcodes = filteredBarcodes?.slice(
     page * rowsPerPage,
@@ -120,16 +108,12 @@ const BarcodeTable: React.FC<{ productId: string }> = ({ productId }) => {
   const handleAddBarcode = async (data: { barcode: string }) => {
     if (product && data.barcode.trim()) {
       setLoading(true);
-      const newBarcodeObject: Barcode = {
-        barcode: data.barcode,
-        createdAt: new Date(),
-      };
 
       const updatedBarcodes = editingBarcode
         ? product.barcode.map((code) =>
-            code.barcode === editingBarcode ? newBarcodeObject : code
+            code === editingBarcode ? data.barcode.trim() : code
           )
-        : [...product.barcode, newBarcodeObject];
+        : [...product.barcode, data.barcode.trim()];
 
       const productRef = doc(db, "products", product.id);
       await updateDoc(productRef, { barcode: updatedBarcodes });
@@ -138,8 +122,8 @@ const BarcodeTable: React.FC<{ productId: string }> = ({ productId }) => {
       reset();
       setEditingBarcode(null);
       setLoading(false);
-      
-      // Enfoca el input después de enviar el formulario
+
+      // Enfocar el input después de enviar el formulario
       if (barcodeInputRef.current) {
         barcodeInputRef.current.focus();
       }
@@ -169,28 +153,6 @@ const BarcodeTable: React.FC<{ productId: string }> = ({ productId }) => {
               backgroundColor: "white",
             }}
           />
-          <Box>
-            <TextField
-              label="Fecha de Inicio"
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              sx={{ marginRight: "16px", backgroundColor: "white" }}
-              slotProps={{
-                inputLabel: { shrink: true },
-              }}
-            />
-            <TextField
-              label="Fecha de Fin"
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              sx={{ backgroundColor: "white" }}
-              slotProps={{
-                inputLabel: { shrink: true },
-              }}
-            />
-          </Box>
         </Box>
 
         <TableContainer component={Paper} className="border-[1px]">
@@ -200,60 +162,53 @@ const BarcodeTable: React.FC<{ productId: string }> = ({ productId }) => {
                 <TableCell>Nombre</TableCell>
                 <TableCell>Color</TableCell>
                 <TableCell>Código de Barras</TableCell>
-                <TableCell>Fecha y Hora</TableCell>
                 <TableCell>Acciones</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-          {paginatedBarcodes && paginatedBarcodes.length > 0 ? (
-            paginatedBarcodes.map((code, index) => (
-              <TableRow key={index}>
-                <TableCell>{product.name}</TableCell>
-                <TableCell>{product.color}</TableCell>
-                <TableCell
-                  sx={{
-                    maxWidth: "200px",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {code.barcode}
-                </TableCell>
-                <TableCell>
-                  {new Date(
-                    code.createdAt instanceof Timestamp
-                      ? code.createdAt.toDate()
-                      : code.createdAt
-                  ).toLocaleString()}
-                </TableCell>
-                <TableCell>
-                  <Button
-                    variant="outlined"
-                    color="primary"
-                    startIcon={<EditIcon />}
-                    onClick={() => handleEditBarcode(code.barcode)}
-                    sx={{ marginRight: "10px" }}
-                  >
-                    Editar
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    color="error"
-                    startIcon={<DeleteIcon />}
-                    onClick={() => openConfirmDialog(code.barcode)}
-                  >
-                    Eliminar
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={5}>No hay códigos de barras</TableCell>
-            </TableRow>
-          )}
-        </TableBody>
+              {paginatedBarcodes && paginatedBarcodes.length > 0 ? (
+                paginatedBarcodes.map((code, index) => (
+                  <TableRow key={index}>
+                    <TableCell>{product.name}</TableCell>
+                    <TableCell>{product.color}</TableCell>
+                    <TableCell
+                      sx={{
+                        maxWidth: "200px",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {code}
+                    </TableCell>
+
+                    <TableCell>
+                      <Button
+                        variant="outlined"
+                        color="primary"
+                        startIcon={<EditIcon />}
+                        onClick={() => handleEditBarcode(code)}
+                        sx={{ marginRight: "10px" }}
+                      >
+                        Editar
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        color="error"
+                        startIcon={<DeleteIcon />}
+                        onClick={() => openConfirmDialog(code)}
+                      >
+                        Eliminar
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={5}>No hay códigos de barras</TableCell>
+                </TableRow>
+              )}
+            </TableBody>
           </Table>
         </TableContainer>
 
@@ -265,29 +220,29 @@ const BarcodeTable: React.FC<{ productId: string }> = ({ productId }) => {
           rowsPerPage={rowsPerPage}
           onRowsPerPageChange={handleChangeRowsPerPage}
         />
-         <Box
-        component="form"
-        onSubmit={handleSubmit(handleAddBarcode)}
-        className="my-4 flex justify-center"
-      >
-        <Controller
-          name="barcode"
-          control={control}
-          defaultValue=""
-          render={({ field }) => (
-            <TextField
-              {...field}
-              inputRef={barcodeInputRef} 
-              label="Nuevo Código de Barras"
-              variant="outlined"
-              sx={{ marginRight: "10px", backgroundColor: "white" }}
-            />
-          )}
-        />
-        <Button variant="contained" color="primary" type="submit">
-          Agregar Código de Barras
-        </Button>
-      </Box>
+        <Box
+          component="form"
+          onSubmit={handleSubmit(handleAddBarcode)}
+          className="my-4 flex justify-center"
+        >
+          <Controller
+            name="barcode"
+            control={control}
+            defaultValue=""
+            render={({ field }) => (
+              <TextField
+                {...field}
+                inputRef={barcodeInputRef}
+                label="Nuevo Código de Barras"
+                variant="outlined"
+                sx={{ marginRight: "10px", backgroundColor: "white" }}
+              />
+            )}
+          />
+          <Button variant="contained" color="primary" type="submit">
+            Agregar Código de Barras
+          </Button>
+        </Box>
         <Box
           component="div"
           className="flex justify-center items-center z-50 relative"
@@ -321,13 +276,13 @@ const BarcodeTable: React.FC<{ productId: string }> = ({ productId }) => {
         />
       )}
       <ConfirmDialog
-          open={confirmDialogOpen}
-          onClose={closeConfirmDialog}
-          onConfirm={handleDeleteBarcode}
-          title="Confirmar Eliminación"
-          description="¿Estás seguro de que deseas eliminar este código de barras?"
-        />
-        <FullScreenLoader loading={loading} />
+        open={confirmDialogOpen}
+        onClose={closeConfirmDialog}
+        onConfirm={handleDeleteBarcode}
+        title="Eliminar código de barras"
+        description="¿Estás seguro de que deseas eliminar este código de barras?"
+      />
+      <FullScreenLoader loading={loading} />
     </>
   );
 };

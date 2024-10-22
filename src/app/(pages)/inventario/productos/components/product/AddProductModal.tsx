@@ -24,7 +24,6 @@ import {
 } from "firebase/firestore";
 import { db } from "@/firebase/config";
 import { LoaderAddProductModal } from "@/components/Loaders";
-import Link from "next/link";
 import { Category } from "@/types/product";
 
 interface ProductModalProps {
@@ -70,8 +69,8 @@ export default function AddProductModal({
     // Agregar campos adicionales
     const newData = {
       ...data,
-      barcode: [], // Agregar campo barcode
-      createdAt: serverTimestamp(), // Agregar campo timestamp
+      barcode: [], 
+      createdAt: serverTimestamp(), 
     };
 
     try {
@@ -173,19 +172,6 @@ export default function AddProductModal({
                 {errors.category && (
                   <FormHelperText>{errors.category.message}</FormHelperText>
                 )}
-                <Link
-                  href="/inventario/categorias"
-                  style={{
-                    marginTop: "8px",
-                    display: "inline-block",
-                    textAlign: "right",
-                    color: "blue",
-                    textDecoration: "underline",
-                  }}
-                  prefetch={false}
-                >
-                  Agregar categoría
-                </Link>
               </FormControl>
               <TextField
                 label="Color"

@@ -3,7 +3,7 @@ import { ReactNode, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthContext"; // Contexto de autenticación
 import Sidebar from "@/components/Sidebar";
-import { Box } from "@mui/material";
+import { Backdrop, Box, CircularProgress } from "@mui/material";
 
 export default function ProtectedLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -18,7 +18,23 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
   }, [user, loading, router, isLoginPage]);
 
   if (loading || (!user && !isLoginPage)) {
-    return <div>Cargando</div>;
+    return <Backdrop
+    open={true} 
+    sx={{
+      position: "fixed",
+      top: 0,
+      left: 0,
+      width: "100vw",
+      height: "100vh",
+      zIndex: 1300, // asegúrate de que esté en el frente
+      backgroundColor: "rgba(0, 0, 0, 0.7)", // color semi-transparente
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+    }}
+  >
+    <CircularProgress size={60} thickness={5} color="primary" />
+  </Backdrop>;
   }
 
   return (
