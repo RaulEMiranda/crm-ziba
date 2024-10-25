@@ -6,7 +6,8 @@ export interface Product {
   category: string;
   color: string;
   price: string;
-  barcode: string[];
+  barcode: string[]; // Códigos de barras disponibles
+  soldBarcodes: string[]; // codigos de barras vendidos
   createdAt: Date | Timestamp;
 }
 

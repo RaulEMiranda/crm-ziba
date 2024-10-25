@@ -8,7 +8,7 @@ export async function GET(
   { params }: { params: { barcode: string } }
 ) {
   const { barcode } = params;
-  console.log(barcode);
+
   if (!barcode) {
     return NextResponse.json(
       { error: "No se proporcionó código de barras" },
@@ -19,13 +19,15 @@ export async function GET(
   try {
     const productsRef = collection(db, "products");
     const querySnapshot = await getDocs(productsRef);
+
     let foundProduct: Product | null = null;
 
     querySnapshot.forEach((doc) => {
       const product = doc.data() as Product;
       if (product.barcode) {
         product.barcode.forEach((code) => {
-          if (code === barcode) { // Compara directamente con el string
+          if (code === barcode) {
+            // Compara directamente con el string
             foundProduct = { ...product, id: doc.id }; // Solo asigna id una vez
           }
         });

@@ -9,91 +9,110 @@ import {
   TableHead,
   TableRow,
   Button,
+  TextField,
+  Alert,
+  Stack,
+  TableContainer,
+  Paper,
 } from "@mui/material";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { Product } from "@/types/product";
-import { api } from "@/lib/utils";
-import BarcodeForm from "./BarcodeForm"; // Importamos el nuevo componente
 import FullScreenLoader from "@/components/Loader";
+import BarcodeForm from "./BarcodeForm";
+import { api } from "@/lib/utils";
 
 interface BoletaProduct extends Product {
   quantity: number;
   totalPrice: number;
-  skus: string[]; // Agregamos un campo para almacenar los barcodes (SKU)
+  skus: string[];
 }
 
 const GenBoletaForm: React.FC = () => {
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    formState: { errors },
-  } = useForm<{ barcode: string }>();
   const [products, setProducts] = useState<BoletaProduct[]>([]);
-  const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState(false);
+  const [client, setClient] = useState<{
+    dni: string;
+    name: string;
+    phone: string;
+  }>({
+    dni: "",
+    name: "",
+    phone: "",
+  });
+  const [clientError, setClientError] = useState<string>("");
 
-  const onSubmit = async (data: { barcode: string }) => {
-    const { barcode } = data;
+  const { control, handleSubmit, reset } = useForm({
+    defaultValues: {
+      dni: "",
+    },
+  });
 
-    // Verificar si el barcode ya existe en los productos
-    const existingProduct = products.find((p) => p.skus.includes(barcode));
-
-    if (existingProduct) {
-      setError("Este producto ya se agregó al comprobante");
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const response = await api.get(`/products/${barcode}`);
-      const product: Product = response.data;
-
+  const handleProductAdd = (product: Product, barcode: string) => {
+    const existingBoletaProduct = products.find((p) => p.id === product.id);
+    if (existingBoletaProduct) {
+      setProducts((prevProducts) =>
+        prevProducts.map((p) =>
+          p.id === product.id
+            ? {
+                ...p,
+                quantity: p.quantity + 1,
+                totalPrice: (p.quantity + 1) * parseFloat(product.price),
+                skus: [...p.skus, barcode],
+              }
+            : p
+        )
+      );
+    } else {
       const newProduct = {
         ...product,
         quantity: 1,
         totalPrice: parseFloat(product.price),
-        skus: [barcode], // Inicializamos la lista de skus con el primer barcode
+        skus: [barcode],
       };
+      setProducts((prevProducts) => [...prevProducts, newProduct]);
+    }
+  };
 
-      // Verificar si el producto ya está en la boleta
-      const existingBoletaProduct = products.find((p) => p.id === product.id);
-      if (existingBoletaProduct) {
-        // Actualizar la cantidad y el total si ya existe en la boleta
-        setProducts((prevProducts) =>
-          prevProducts.map((p) =>
-            p.id === product.id
-              ? {
-                  ...p,
-                  quantity: p.quantity + 1,
-                  totalPrice: (p.quantity + 1) * parseFloat(product.price),
-                  skus: [...p.skus, barcode], // Agregar el nuevo barcode (SKU)
-                }
-              : p
-          )
-        );
-      } else {
-        // Si el producto no existe, lo añadimos
-        setProducts((prevProducts) => [...prevProducts, newProduct]);
-      }
-
-      // Resetear el input y el error
-      setValue("barcode", "");
-      setError("");
-      setLoading(false);
+  const handleSearchClient = async (data: { dni: string }) => {
+    try {
+      const response = await api.get(`/clients/${data.dni}`);
+      const existingClient = response.data;
+      setClient({
+        dni: data.dni,
+        name: existingClient.name,
+        phone: existingClient.phone,
+      });
+      setClientError("");
     } catch (error) {
-      setLoading(false);
-      console.error("Error al agregar el producto:", error);
-      setError("Error al agregar el producto.");
+      console.log(error);
+      setClientError("El cliente aún no ha sido registrado.");
     }
   };
 
   const handleGenerateBoleta = async () => {
+    if (!client.name || !client.phone) {
+      setClientError("Debes completar todos los datos del cliente.");
+      return;
+    }
     try {
       setLoading(true);
+      let clientId;
+      let ClientResponse;
 
-      // Suponiendo que ya tienes el ID del cliente (puedes modificar esta parte)
-      const clientId = "client-id"; // Asigna el ID real del cliente
+      if (clientError) {
+        ClientResponse = await api.post("/clients", {
+          dni: client.dni,
+          name: client.name,
+          phone: client.phone,
+          address: "sin direccion",
+          purchaseHistory: [],
+          email: "sin email",
+        });
+        clientId = ClientResponse.data.id;
+      } else {
+        ClientResponse = await api.get(`/clients/${client.dni}`);
+        clientId = ClientResponse.data.id;
+      }
 
       const saleData = {
         clientId,
@@ -104,26 +123,23 @@ const GenBoletaForm: React.FC = () => {
         products: products.map((product) => ({
           productId: product.id,
           quantity: product.quantity,
+          barcodes: product.skus,
         })),
       };
 
-      const response = await fetch("/api/sales", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(saleData),
+      const sale = await api.post("/sales", saleData);
+      await api.put(`/clients/clientId/${ClientResponse.data.id}/purchase`, {
+        purchaseId: sale.data.id,
       });
-
-      if (!response.ok) {
-        throw new Error("Error al generar la boleta");
+      for (const product of saleData.products) {
+        await api.put(`/products/productId/${product.productId}`, {
+          barcodes: product.barcodes,
+        });
       }
-
-      const data = await response.json();
-      console.log("Boleta generada exitosamente", data);
-
-      // Aquí puedes hacer algo con los datos retornados, como limpiar el formulario o mostrar un mensaje de éxito
-
+      reset();
+      setClient({ dni: "", name: "", phone: "" });
+      setProducts([]);
+      setClientError("");
       setLoading(false);
     } catch (error) {
       console.error("Error al generar la boleta:", error);
@@ -139,49 +155,95 @@ const GenBoletaForm: React.FC = () => {
   return (
     <>
       <Box>
-        <BarcodeForm
-          onSubmit={handleSubmit(onSubmit)}
-          register={register}
-          errors={errors}
-          errorMessage={error}
-        />
+        <form onSubmit={handleSubmit(handleSearchClient)}>
+          <Controller
+            name="dni"
+            control={control}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                label="DNI"
+                variant="outlined"
+                fullWidth
+                className="bg-white"
+              />
+            )}
+          />
+          <Button
+            variant="contained"
+            color="primary"
+            type="submit"
+            className="mt-4"
+          >
+            Buscar Cliente
+          </Button>
+        </form>
 
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell className="min-w-[200px] max-w-[300px]">
-                Nombre
-              </TableCell>
-              <TableCell className="min-w-[200px] max-w-[250px]">
-                SKU (Barcodes)
-              </TableCell>
-              <TableCell>Cantidad</TableCell>
-              <TableCell>Precio Unitario</TableCell>
-              <TableCell>Precio Final</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {products.map((product) => (
-              <TableRow key={product.id}>
-                <TableCell className="min-w-[200px] max-w-[300px]">
-                  {product.name}
-                </TableCell>
-                <TableCell className="min-w-[200px] max-w-[250px]">
-                  {product.skus.join(", ")}
-                </TableCell>
-                <TableCell>{product.quantity}</TableCell>
-                <TableCell>{product.price}</TableCell>
-                <TableCell>{product.totalPrice.toFixed(2)}</TableCell>
+        {clientError && (
+          <Alert severity="warning" className="mt-3">
+            {clientError}
+          </Alert>
+        )}
+
+        <Stack direction="row" spacing={2}>
+          <Box flex={1}>
+            <TextField
+              label="Nombre"
+              variant="outlined"
+              fullWidth
+              margin="normal"
+              value={client.name}
+              onChange={(e) => setClient({ ...client, name: e.target.value })}
+              disabled={!clientError}
+              className="bg-white"
+            />
+          </Box>
+          <Box flex={1}>
+            <TextField
+              label="Teléfono"
+              variant="outlined"
+              fullWidth
+              margin="normal"
+              value={client.phone}
+              onChange={(e) => setClient({ ...client, phone: e.target.value })}
+              disabled={!clientError}
+              className="bg-white"
+            />
+          </Box>
+        </Stack>
+
+        <BarcodeForm onProductAdd={handleProductAdd} products={products} />
+        <TableContainer
+          component={Paper}
+          className="max-w-[1500px] mx-auto mt-5 border-[1px]"
+        >
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Nombre</TableCell>
+                <TableCell>SKU (Barcodes)</TableCell>
+                <TableCell>Cantidad</TableCell>
+                <TableCell>Precio Unitario</TableCell>
+                <TableCell>Precio Final</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-
+            </TableHead>
+            <TableBody>
+              {products.map((product) => (
+                <TableRow key={product.id}>
+                  <TableCell>{product.name}</TableCell>
+                  <TableCell>{product.skus.join(", ")}</TableCell>
+                  <TableCell>{product.quantity}</TableCell>
+                  <TableCell>{product.price}</TableCell>
+                  <TableCell>{product.totalPrice.toFixed(2)}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
         <Box mt={4}>
           <Typography variant="h6">Total: {totalPrice.toFixed(2)}</Typography>
         </Box>
 
-        {/* Botón para generar la boleta */}
         <Button
           variant="contained"
           color="secondary"
