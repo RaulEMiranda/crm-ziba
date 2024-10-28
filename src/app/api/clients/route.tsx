@@ -30,6 +30,7 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     console.log("hola 1");
+    console.log(body);
     
     const { address, email, name, phone, dni, purchaseHistory } = body;
 

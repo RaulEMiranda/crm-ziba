@@ -8,6 +8,7 @@ export default async function Historial() {
       </Box>
       {/* Productos */}
       {/* Pagination */}
+  
     </Box>
   );
 }

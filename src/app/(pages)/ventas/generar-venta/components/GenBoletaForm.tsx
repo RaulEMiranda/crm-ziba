@@ -19,11 +19,11 @@ import { useForm, Controller } from "react-hook-form";
 import { Product } from "@/types/product";
 import FullScreenLoader from "@/components/Loader";
 import BarcodeForm from "./BarcodeForm";
-import { api } from "@/lib/utils";
+import { api, handleDownloadPDF } from "@/lib/utils";
 
 interface BoletaProduct extends Product {
   quantity: number;
-  totalPrice: number;
+  priceTotal: number;
   skus: string[];
 }
 
@@ -56,7 +56,7 @@ const GenBoletaForm: React.FC = () => {
             ? {
                 ...p,
                 quantity: p.quantity + 1,
-                totalPrice: (p.quantity + 1) * parseFloat(product.price),
+                priceTotal: (p.quantity + 1) * parseFloat(product.price),
                 skus: [...p.skus, barcode],
               }
             : p
@@ -66,7 +66,7 @@ const GenBoletaForm: React.FC = () => {
       const newProduct = {
         ...product,
         quantity: 1,
-        totalPrice: parseFloat(product.price),
+        priceTotal: parseFloat(product.price),
         skus: [barcode],
       };
       setProducts((prevProducts) => [...prevProducts, newProduct]);
@@ -85,6 +85,11 @@ const GenBoletaForm: React.FC = () => {
       setClientError("");
     } catch (error) {
       console.log(error);
+      setClient({
+        dni: data.dni,
+        name: "",
+        phone: "",
+      });
       setClientError("El cliente aún no ha sido registrado.");
     }
   };
@@ -117,7 +122,7 @@ const GenBoletaForm: React.FC = () => {
       const saleData = {
         clientId,
         priceTotal: products.reduce(
-          (total, product) => total + product.totalPrice,
+          (total, product) => total + product.priceTotal,
           0
         ),
         products: products.map((product) => ({
@@ -126,6 +131,9 @@ const GenBoletaForm: React.FC = () => {
           barcodes: product.skus,
         })),
       };
+      console.log(products);
+      console.log(saleData);
+      console.log(ClientResponse.data);
 
       const sale = await api.post("/sales", saleData);
       await api.put(`/clients/clientId/${ClientResponse.data.id}/purchase`, {
@@ -136,10 +144,29 @@ const GenBoletaForm: React.FC = () => {
           barcodes: product.barcodes,
         });
       }
+      console.log(sale.data);
+      const productsPDF = products.map((product) => ({
+        barcode: product.skus,
+        quantity: product.quantity,
+        name: product.name,
+        price: product.price.toString(),
+        priceTotal: product.priceTotal.toString(),
+      }));
       reset();
       setClient({ dni: "", name: "", phone: "" });
       setProducts([]);
       setClientError("");
+      await handleDownloadPDF({
+        name: ClientResponse.data.name,
+        address: ClientResponse.data.address,
+        dni: ClientResponse.data.dni,
+        priceTotal: sale.data.priceTotal,
+        createdAt: new Date(
+          sale.data.createdAt.seconds * 1000
+        ).toLocaleDateString("es-ES"),
+        phone: ClientResponse.data.phone,
+        products: productsPDF,
+      });
       setLoading(false);
     } catch (error) {
       console.error("Error al generar la boleta:", error);
@@ -147,8 +174,8 @@ const GenBoletaForm: React.FC = () => {
     }
   };
 
-  const totalPrice = products.reduce(
-    (total, product) => total + product.totalPrice,
+  const priceTotal = products.reduce(
+    (total, product) => total + product.priceTotal,
     0
   );
 
@@ -234,14 +261,14 @@ const GenBoletaForm: React.FC = () => {
                   <TableCell>{product.skus.join(", ")}</TableCell>
                   <TableCell>{product.quantity}</TableCell>
                   <TableCell>{product.price}</TableCell>
-                  <TableCell>{product.totalPrice.toFixed(2)}</TableCell>
+                  <TableCell>{product.priceTotal.toFixed(2)}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </TableContainer>
         <Box mt={4}>
-          <Typography variant="h6">Total: {totalPrice.toFixed(2)}</Typography>
+          <Typography variant="h6">Total: {priceTotal.toFixed(2)}</Typography>
         </Box>
 
         <Button
