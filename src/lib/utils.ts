@@ -11,7 +11,7 @@ export const api = axios.create({
 
 export const handleDownloadPDF = async (data: {
   name: string;
-  address: string ;
+  address: string;
   dni: string;
   createdAt: string;
   phone: string;
@@ -112,18 +112,18 @@ export const handleDownloadPDF = async (data: {
   let currentY = 520;
   data.products.forEach((product) => {
     // Dibuja cada código de barras en una línea separada
-    let barcodeY = currentY;
+
     page.drawText(product.name, { x: 200, y: currentY, size: 9, font });
     page.drawText(product.price, { x: 420, y: currentY, size: 9, font });
     page.drawText(product.priceTotal, { x: 500, y: currentY, size: 9, font });
-    
+
     page.drawText(product.quantity.toString(), {
       x: 130,
       y: currentY,
       size: 9,
       font,
     });
-    
+
     product.barcode.forEach((code) => {
       page.drawText(code, { x: 40, y: currentY, size: 9, font });
       currentY -= 10; // Ajusta el espaciado entre los códigos de barras
@@ -144,11 +144,11 @@ export const handleDownloadPDF = async (data: {
   const fontSize = 9;
 
   const gravadasDescription = "Operaciones gravadas: S/";
-  const gravadasValue = (data.priceTotal*0.82).toFixed(2).toString();
+  const gravadasValue = (data.priceTotal * 0.82).toFixed(2).toString();
   const igvDescription = "I.G.V.: S/";
-  const igvValue = (data.priceTotal*0.18).toFixed(2).toString();
+  const igvValue = (data.priceTotal * 0.18).toFixed(2).toString();
   const totalDescription = "Importe Total: S/";
-  const totalValue = (data.priceTotal).toFixed(2).toString();
+  const totalValue = data.priceTotal.toFixed(2).toString();
 
   const gravadasDescriptionWidth = font.widthOfTextAtSize(
     gravadasDescription,

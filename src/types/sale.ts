@@ -1,9 +1,9 @@
 import { Timestamp } from 'firebase/firestore';
 
 export interface Sale {
-  id: string;
+  id: string; 
   clientId: string;
-  createdAt: Date | Timestamp;
+  createdAt: Timestamp;
   priceTotal: number;
   products: {
     productId: string;
